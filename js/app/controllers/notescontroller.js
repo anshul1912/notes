@@ -14,6 +14,13 @@ app.controller('NotesController', function($routeParams, $scope, $location,
     $scope.notesLoaded = false;
     $scope.notes = NotesModel.getAll();
 
+    $scope.folderSelectorOpen = false;
+    $scope.filterCategory = null;
+
+    $scope.orderRecent = ['-favorite','-modified'];
+    $scope.orderAlpha = ['category','-favorite','title'];
+    $scope.filterOrder = $scope.orderRecent;
+
     var notesResource = Restangular.all('notes');
 
     // initial request for getting all notes
@@ -23,7 +30,7 @@ app.controller('NotesController', function($routeParams, $scope, $location,
     });
 
     $scope.create = function () {
-        notesResource.post().then(function (note) {
+        notesResource.post({category: $scope.filterCategory}).then(function (note) {
             NotesModel.add(note);
             $location.path('/notes/' + note.id);
         });
@@ -45,6 +52,56 @@ app.controller('NotesController', function($routeParams, $scope, $location,
         });
     };
 
+    $scope.toggleFolderSelector = function () {
+        $scope.folderSelectorOpen = !$scope.folderSelectorOpen;
+    };
+
+    $scope.setFilter = function (category) {
+        $scope.filterOrder = category===null ? $scope.orderRecent : $scope.orderAlpha;
+        $scope.filterCategory = category;
+        $scope.folderSelectorOpen = false;
+    };
+
+    $scope.categoryFilter = function (note) {
+        if($scope.filterCategory!==null) {
+            return note.category===$scope.filterCategory || (note.category!==null && note.category.startsWith($scope.filterCategory+'/'));
+        }
+        return true;
+    };
+
+    $scope.nthIndexOf = function(str, pattern, n) {
+        var i = -1;
+        while (n-- && i++ < str.length) {
+            i = str.indexOf(pattern, i);
+            if (i < 0) {
+                break;
+            }
+        }
+        return i;
+    };
+
+    $scope.getCategories = _.memoize(function (notes, maxLevel) {
+        var categories = {};
+        for(var i=0; i<notes.length; i++) {
+            var cat = notes[i].category;
+            if(maxLevel>0) {
+                var index = $scope.nthIndexOf(cat, '/', maxLevel);
+                if(index>0) {
+                    cat = cat.substring(0, index);
+                }
+            }
+            if(categories[cat]===undefined) {
+                categories[cat] = 1;
+            } else {
+                categories[cat]++;
+            }
+        }
+        var result = [];
+        for(var category in categories) {
+            result.push({ name: category, count: categories[category]});
+        }
+        return result;
+    });
 
     $window.onbeforeunload = function() {
         var notes = NotesModel.getAll();
