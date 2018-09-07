@@ -139,9 +139,12 @@
 }
 
 #app-content .note-meta {
-    position: relative;
-    padding: 0 45px 30px 45px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 0 45px 0px 45px;
     margin: -10px 0 0;
+    background-color: white; /* TODO Theming! */
     -ms-user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
@@ -163,7 +166,9 @@
     padding: 0.5ex 1ex;
 }
 #app-content .note-meta-right {
-    float: right;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
 }
 
 #app-content .note-meta > .saving {
